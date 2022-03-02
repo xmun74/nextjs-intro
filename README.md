@@ -10,12 +10,13 @@
 
 ## Framework vs Library
 
-- Framework: 내 코드를 불어옴. 규칙에 따라야함. 프레임워크가 그 코드를 호출. 커스텀못함
+- Framework: 프레임워크가 내 코드를 불어옴. 규칙에 따라야함. 프레임워크가 그 코드를 호출. 커스텀못함
 - Library : 내가 불러옴. 커스텀해서 코드작성가능.
 
 ## pages
 
-- 해당 파일명이 url이름이 된다. about.js하면 `http~~/about`
+- 해당 파일명이 url이름이 된다. about.js하면 `/about`
+- index.js는 url이 `/`다.
 - export default를 필수로 해야한다.
 - component명은 아무거나 해도 상관없다. `export default Potato() {}`
 - react rounter DOM 다운안해도 됨. create react-app에선 직접 만들었었음.
@@ -107,19 +108,13 @@ export default function NavBar() {
 
 - 파일명이 `파일명.module.css`의 방식
 - 페이지 빌드시 className을 무작위로 생성 = 자동으로 중복제거해줘서 재사용성 높아짐
-
-```js
-  return (
-    <nav className="nav"> //이렇겐 작동안함
-
-```
+- `<nav className="nav">` : 이렇겐 작동안함
+- className을 만들어야 하고 복붙해야함
 
 ```js
 import styles from "./NavBar.module.css"; //추가
 ...
-  return (
-    <nav className={styles.nav}> //작동함
-
+<nav className={styles.nav}> //작동함
 ```
 
 **<공통css, 조건부css 둘다 적용하기>**
@@ -145,6 +140,7 @@ className={[
 
 ## Styles JSX
 
+- 해당 컴포넌트에서만 scoped(한정되어 적용) 됨
 - `` <style jsx>{` 태그{ 스타일 적용 } `}</style> ``
 
 ```js
@@ -160,3 +156,34 @@ className={[
   }
 `}</style>
 ```
+
+## 전역 스타일
+
+- App Component, App Page
+- reactjs는 각각 구분된 페이지여서 전역CSS가 적용이 안됨.
+- `_app.js` 파일에서만 전역CSS 적용가능 (파일명 `_app.js` 필수여야함)
+
+```js
+import NavBar from "../components/NavBar";
+import "../styles/globals.css"; //이파일에서만 전역css import가능
+
+export default function App({ Component, PageProps }) {
+  return (
+    <>
+      <NavBar />
+      <Component {...PageProps} />
+      <style jsx global>
+        {`
+          a {
+            color: white; //작동안되는 것
+          }
+        `}
+      </style>
+    </>
+  );
+}
+```
+
+---
+
+# Practice project
