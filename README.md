@@ -143,4 +143,20 @@ className={[
           ].join(" ")}
 ```
 
-3.
+## Styles JSX
+
+- `` <style jsx>{` 태그{ 스타일 적용 } `}</style> ``
+
+```js
+<style jsx>{`
+  nav {
+    background-color: tomato;
+  }
+  a {
+    text-decoration: none;
+  }
+  .active {
+    color: yellow;
+  }
+`}</style>
+```
