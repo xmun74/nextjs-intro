@@ -68,3 +68,79 @@ import Link from "next/link";
   <a style={{ color: router.pathname === "/about" ? "red" : "blue" }}>About</a>
 </Link>;
 ```
+
+## Router
+
+- useRouter : router와 연결하는 Hook
+- router설치, router render를 안해도 됨
+
+```js
+import { useRouter } from "next/router"; //추가
+
+export default function NavBar() {
+  const router = useRouter(); //추가
+
+  return (
+    <nav>
+      <Link href="/">
+        <a style={{ color: router.pathname === "/" ? "red" : "blue" }}>Home</a>
+      </Link>
+      <Link href="/about">
+        <a style={{ color: router.pathname === "/about" ? "red" : "blue" }}>
+          About
+        </a>
+      </Link>
+    </nav>
+  );
+}
+```
+
+## CSS Modules
+
+### `style={{}}`로 컴포넌트 내부에 작성하는 방식
+
+```js
+<a style={{ color: router.pathname === "/" ? "red" : "blue" }}>Home</a>
+```
+
+### CSS Modules 방식 : 기본 CSS 사용가능해짐
+
+- 파일명이 `파일명.module.css`의 방식
+- 페이지 빌드시 className을 무작위로 생성 = 자동으로 중복제거해줘서 재사용성 높아짐
+
+```js
+  return (
+    <nav className="nav"> //이렇겐 작동안함
+
+```
+
+```js
+import styles from "./NavBar.module.css"; //추가
+...
+  return (
+    <nav className={styles.nav}> //작동함
+
+```
+
+**<공통css, 조건부css 둘다 적용하기>**
+
+1. className={`${공통css} ${조건부css}`}
+
+```js
+className={`${styles.link} ${
+            router.pathname === "/" ? styles.active : ""
+          }`}
+```
+
+2. className={[공통css, 조건부css,].join(" ")}
+
+- .join(" ") : 배열요소 사이에 " "공백 넣어서 연결
+
+```js
+className={[
+            styles.link,
+            router.pathname === "/about" ? styles.active : "",
+          ].join(" ")}
+```
+
+3.
