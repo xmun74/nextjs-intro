@@ -8,6 +8,10 @@
 - `npm run dev`
 - pages폴더에 있는 파일 전부 삭제
 
+---
+
+# #1. Framework overview
+
 ## Framework vs Library
 
 - Framework: 프레임워크가 내 코드를 불어옴. 규칙에 따라야함. 프레임워크가 그 코드를 호출. 커스텀못함
@@ -34,18 +38,18 @@
 
 ## CSR: client-side render
 
-> 브라우저가 js코드 다운받고 client-side의 js가 모든 ui를 만드는것. 브라우저가 모든 것을 한다.
-> create react app
-> 브라우저가 html가져올때 비어있는 div로 가져온다.
-> 브라우저가 js, react.js 실행하고 나서 ui가 만들어짐
-> 느린인터넷에선 js가 다운되기전까진 흰화면만 보임 로딩되면 데이터가 보임
+> 브라우저가 js코드 다운받고 client-side의 js가 모든 ui를 만드는것. 브라우저가 모든 것을 한다.  
+> create react app  
+> 브라우저가 html가져올때 비어있는 div로 가져온다.  
+> 브라우저가 js, react.js 실행하고 나서 ui가 만들어짐  
+> 느린인터넷에선 js가 다운되기전까진 흰화면만 보임 로딩되면 데이터가 보임  
 > js비활성화하면 안보임
 
 ## SSR: server-side render
 
-> next js
-> js비활성화해도 보임. 실제 html이 소스코드에 들어있음. react.js기능은 안되지만 화면은 보임
-> 페이지는 초기상태로 미리 렌더링해서 생성된 html 봄. => react.js연결되면 기능도 활성화됨
+> next js  
+> js비활성화해도 보임. 실제 html이 소스코드에 들어있음. react.js기능은 안되지만 화면은 보임  
+> 페이지는 초기상태로 미리 렌더링해서 생성된 html 봄. => react.js연결되면 기능도 활성화됨  
 > SEO에 좋은 구글 검색엔진, 유저에게 좋음
 
 - source code보기 ctrl + U
@@ -160,14 +164,17 @@ className={[
 ## 전역 스타일
 
 - App Component, App Page
-- reactjs는 각각 구분된 페이지여서 전역CSS가 적용이 안됨.
-- `_app.js` 파일에서만 전역CSS 적용가능 (파일명 `_app.js` 필수여야함)
+- reactjs는 각각 구분된 페이지여서 전역CSS가 적용이 안됨
+- pages폴더에 `_app.js` 파일에서만 전역CSS 적용가능 (파일명 `_app.js` 필수여야함)
+- `_app.js` 컴포넌트명은 아무거나 가능
 
 ```js
+// pages/_app.js
 import NavBar from "../components/NavBar";
 import "../styles/globals.css"; //이파일에서만 전역css import가능
 
-export default function App({ Component, PageProps }) {
+export default function MyApp({ Component, PageProps }) {
+  //컴포넌트명은 아무거나 가능
   return (
     <>
       <NavBar />
@@ -186,4 +193,134 @@ export default function App({ Component, PageProps }) {
 
 ---
 
-# Practice project
+# #2. Practice project
+
+## Patterns
+
+- `{ children }` : react.js가 제공하는 prop이다. 한 컴포넌트를 다른 컴포넌트 안에 넣을 때 사용함.
+- `_app.js`파일에선 전역으로 import할 것이 많아서(google analytics, 검색엔진, 스크립트분석 등) 해당파일이 커지는건 원하지 않으므로, `Layout.js`에서 코드를 작성한다.
+
+```jsx
+//Layout.js
+import NavBar from "./NavBar";
+
+export default function Layout({ children }) {
+  return (
+    <>
+      <NavBar />
+      <div>{children}</div>
+    </>
+  );
+}
+```
+
+```jsx
+//_app.js
+import Layout from "../components/Layout";
+import "../styles/globals.css"; //이파일에서만 전역css import가능
+
+export default function AnyApp({ Component, pageProps }) {
+  return (
+    <Layout>
+      <Component {...pageProps} />
+    </Layout>
+  );
+}
+```
+
+- 헤더타이틀 변경 컴포넌트만들기 :components/Seo.js 생성
+- index, about.js 에 Seo컴포넌트 삽입
+
+```js
+//about.js
+import Seo from "../components/Seo";
+  ...
+      <Seo title="About" />
+```
+
+```jsx
+import Head from "next/head";
+
+export default function Seo({ title }) {
+  return (
+    <Head>
+      <title>{title} | Next Movies</title>
+    </Head>
+  );
+}
+```
+
+## Fetching Data
+
+- API keys 숨기기
+  1. API key 사이트 : https://www.themoviedb.org/?language=ko
+  2. 로그인 - Settings - API - API 키 (v3 auth) 복사
+  3. https://developers.themoviedb.org/3/movies/get-popular-movies 에서 사용법보고 `index.js`작성
+
+### 즉시실행함수(IIFE, Immediately Invoked Function Expression) : 정의되면 즉시 실행되는 함수.
+
+- 함수표현식으로 사용해야한다. `function(){}`(함수이름 정의안된것)
+- 내부에 정의된 어떤 변수도 바깥에 보이기 않는다.
+
+  1. 방식 1
+
+```jsx
+(function () {
+  statements;
+})();
+```
+
+1번째 `()`괄호는 익명함수다. 다른 변수들 접근을 막을 수 있다.  
+2번째 `()`괄호는 즉시실행함수를 생성한다. 이로 JS는 함수를 즉시 실행한다.
+
+2. 방식 2
+
+```jsx
+(function () {
+  statements;
+})();
+```
+
+```jsx
+//index.js
+import { useEffect, useState } from "react";
+import Seo from "../components/Seo";
+
+const API_KEY = "1a9274478cb8fe088e108a3681a7582e";
+
+export default function Home() {
+  const [movies, setMovies] = useState([]);
+  useEffect(() => {
+    //fetch response data받아오기
+    (async () => {
+      const { results } = await //response받기, 데이터받을await 1
+      //받아온값.json하는 await 2
+      (
+        await fetch(
+          `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`
+        )
+      ).json();
+      setMovies(results);
+    })(); // (async익명함수)()즉시실행
+  }, []);
+  return (
+    <div>
+      <Seo title="Home" />
+      {!movies && <h4>Loading ...</h4>}
+      {movies?.map((movie) => (
+        <div key={movie.id}>
+          <h4>{movie.original_title}</h4>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+- `<img>`태그 대신 next의 `<Image>`사용하기 (이강의에선 안했음)
+
+```jsx
+import Image from "next/image";
+...
+<Image src="me.png" alt="Picture of the author" width={500} height={500} />;
+```
