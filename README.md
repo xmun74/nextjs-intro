@@ -10,6 +10,8 @@
 
 ---
 
+<br><br><br><br>
+
 # #1. Framework overview
 
 ## Framework vs Library
@@ -193,6 +195,8 @@ export default function MyApp({ Component, PageProps }) {
 
 ---
 
+<br><br><br><br>
+
 # #2. Practice project
 
 ## Patterns
@@ -262,7 +266,7 @@ export default function Seo({ title }) {
 - 함수표현식으로 사용해야한다. `function(){}`(함수이름 정의안된것)
 - 내부에 정의된 어떤 변수도 바깥에 보이기 않는다.
 
-  1. 방식 1
+1. 방식 1
 
 ```jsx
 (function () {
@@ -324,3 +328,43 @@ import Image from "next/image";
 ...
 <Image src="me.png" alt="Picture of the author" width={500} height={500} />;
 ```
+
+## Redirect, Rewrite
+
+- API KEY숨기기 : 사용량제한될수도 있어서 공개되면 남용될수있음.
+  1. redirects: URL 변경됨
+  2. rewrites: URL 변경안됨
+  - `.env`파일생성후 `API_KEY=키복붙` 입력하기
+  - `.gitignore`에 `.env` 마지막에 넣기
+  - `next.config.js`파일에 rewrites로 api key 숨기기
+  - `index.js`에 `` const { results } = await (await fetch(`/api/movies`)).json(); ``로 `/api/movies`로 변경함
+
+```jsx
+//next.config.js
+const API_KEY = process.env.API_KEY; //.env파일에 api key를 숨긴다
+
+const nextConfig = {
+  reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: "/old-blog/:path*", //이 url로 가면 밑url로 자동이동함
+        destination: "/new-blog/:path*",
+        permanent: false,
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/movies",
+        destination: `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`, //여기에 api key를 숨긴다
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
+```
+
+## Server side Rendering
