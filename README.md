@@ -496,3 +496,24 @@ export default function AnyApp({ Component, pageProps }) {
 // <Component {...pageProps} /> props가 {...pageProps}로 들어온다
 // <Home {results} />           예를들면 이렇게 들어오는 것.
 ```
+
+<br><br><br><br>
+
+## Dynamic Routes
+
+### 중첩라우터
+
+ex) `/movies/all`  
+pages/movies폴더/all.js만들기  
+<br>
+ex) `/movies`  
+pages/movies폴더/index.js만들기
+
+<br><br>
+
+### URL에 변수 넣는법
+
+ex) `/movies/1212121`  
+pages/movies폴더/**[변수명].js** 생성
+
+<br><br><br><br>

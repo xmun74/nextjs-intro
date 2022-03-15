@@ -45,8 +45,7 @@ export default function Home({ results }) {
 // getServerSideProps : 이름변경안됨. export하고, async는 선택사항. props라는 key가 들어있고 안에 원하는 데이터넣을 수 있음
 // Server side통해 props를 Page로 보낼 수 있다
 export async function getServerSideProps() {
-  // 여기서 쓰는 코드는 서버(백엔드)에서만 작동함
-  // API KEY를 여기에 쓰면 절대로 클라이언트(브라우저)에게 안보임
+  // 내부 코드(API KEY)는 서버(백엔드)에서만 작동함. 절대로 클라이언트(브라우저)에 안보임
   const { results } = await (
     await fetch(`http://localhost:3000/api/movies`)
   ).json();
