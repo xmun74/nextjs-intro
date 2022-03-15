@@ -38,21 +38,24 @@
 - 앱 페이지들이 미리 렌더링된다.
 - static(정적)으로 생성됨.
 
-## CSR: client-side render
+## CSR : client-side render
 
-> 브라우저가 js코드 다운받고 client-side의 js가 모든 ui를 만드는것. 브라우저가 모든 것을 한다.  
-> create react app  
-> 브라우저가 html가져올때 비어있는 div로 가져온다.  
-> 브라우저가 js, react.js 실행하고 나서 ui가 만들어짐  
-> 느린인터넷에선 js가 다운되기전까진 흰화면만 보임 로딩되면 데이터가 보임  
-> js비활성화하면 안보임
+> 클라이언트(브라우저)가 js코드 다운 => client-side의 js가 모든 ui를 만드는것. 브라우저가 모든 것을 한다.  
+> create react app
+>
+> - 브라우저가 html가져올때 비어있는 div로 가져온다.
+> - 브라우저가 js, react.js 실행하고 나서 ui가 만들어짐
+> - 느린인터넷에선 js가 다운되기전까진 흰화면만 보임 로딩되면 데이터가 보임
+> - JS 비활성화하면 안보임
+> - SEO 필요없는 페이지에 사용 ex) 개인 데시보드 (비공개) 페이지
 
-## SSR: server-side render
+## SSR : server-side render
 
-> next js  
-> js비활성화해도 보임. 실제 html이 소스코드에 들어있음. react.js기능은 안되지만 화면은 보임  
-> 페이지는 초기상태로 미리 렌더링해서 생성된 html 봄. => react.js연결되면 기능도 활성화됨  
-> SEO에 좋은 구글 검색엔진, 유저에게 좋음
+> next js
+>
+> - JS 비활성화해도 보임. 실제 html이 소스코드에 들어있음. react.js동적기능은 안되지만 화면은 보임
+> - 페이지는 초기상태로 pre-render해서 생성된 html 봄. => react.js연결되면 기능도 활성화됨
+> - SEO에 좋은 구글 검색엔진이다. 유저에게 좋음
 
 - source code보기 ctrl + U
 
@@ -440,3 +443,56 @@ useEffect(() => {
 <br><br><br><br>
 
 ## Server side Rendering
+
+### CSR
+
+- Loading화면 보여준다음 데이터 받기. 소스코드 html에 데이터없음
+- SEO 관련없는 페이지에서 사용 ex) 사용자 대시보드 페이지(비공개페이지)
+- 데이터가 자주 업데이트되며 pre-render할 필요없을때 사용
+
+### SSR
+
+- 데이터API 받기 전까진 빈화면이었다가, 받으면 화면보이고 소스코드 HTML에 데이터담김
+- SEO가 필요한 페이지에서 사용(html에 데이터 다 담겨있어서 SEO유리)
+- loading화면 안보여주고 싶을 때 사용
+- 자바스크립트 비활성화해도 보임. 그냥 html이어서
+- 동작순서
+  1. nextJS가 백엔드(API)에서 받은 props(data)를 return한다
+  2. reactJS가 props(data)인 results 배열 가져와서 프론트엔드에 html보여줌
+
+### SSR하기 : getServerSideProps
+
+- 이름변경안된다
+- export는 필수고, async는 선택사항.
+- props라는 key가 들어있고 안에 원하는 데이터넣을 수 있음
+- 여기서 쓰는 내부코드는 서버(백엔드)에서만 작동함
+- API KEY를 여기에 쓰면 절대로 클라이언트(브라우저)에게 안보임
+
+```jsx
+// index.js
+export async function getServerSideProps() {
+  const { results } = await (
+    await fetch(`http://localhost:3000/api/movies`)
+  ).json();
+  return {
+    props: {
+      results, // props에 원하는 데이터 api 넣기
+    },
+  };
+}
+```
+
+- Server side통해 props를 Page로 보낼 수 있다
+
+```jsx
+//_app.js
+export default function AnyApp({ Component, pageProps }) {
+  return (
+    <Layout>
+      <Component {...pageProps} />
+    </Layout>
+  );
+}
+// <Component {...pageProps} /> props가 {...pageProps}로 들어온다
+// <Home {results} />           예를들면 이렇게 들어오는 것.
+```
