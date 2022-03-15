@@ -517,3 +517,19 @@ ex) `/movies/1212121`
 pages/movies폴더/**[변수명].js** 생성
 
 <br><br><br><br>
+
+## Movie Detail
+
+### router.push(url,as,options)
+
+> URL에서 URL로 state 넘겨주기(유저한텐 숨긴상태로)  
+> url : 탐색할 URL  
+> as : 브라우저url에 표시될 경로
+
+<br><br><br><br>
+
+## Catch All
+
+<br><br><br><br>
+
+## 404 Pages
