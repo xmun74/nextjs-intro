@@ -232,7 +232,9 @@ export default function AnyApp({ Component, pageProps }) {
 }
 ```
 
-- 헤더타이틀 변경 컴포넌트만들기 :components/Seo.js 생성
+<br><br>
+
+- 헤더타이틀 변경 컴포넌트만들기 : components/Seo.js 생성
 - index, about.js 에 Seo컴포넌트 삽입
 
 ```js
@@ -243,6 +245,7 @@ import Seo from "../components/Seo";
 ```
 
 ```jsx
+//Seo.js 생성
 import Head from "next/head";
 
 export default function Seo({ title }) {
@@ -254,19 +257,27 @@ export default function Seo({ title }) {
 }
 ```
 
+<br><br>
+
 ## Fetching Data
 
-- API keys 숨기기
+- API keys 로 data fetch하기
+
   1. API key 사이트 : https://www.themoviedb.org/?language=ko
   2. 로그인 - Settings - API - API 키 (v3 auth) 복사
   3. https://developers.themoviedb.org/3/movies/get-popular-movies 에서 사용법보고 `index.js`작성
 
-### 즉시실행함수(IIFE, Immediately Invoked Function Expression) : 정의되면 즉시 실행되는 함수.
+<br><br>
 
-- 함수표현식으로 사용해야한다. `function(){}`(함수이름 정의안된것)
-- 내부에 정의된 어떤 변수도 바깥에 보이기 않는다.
+### 즉시실행함수(IIFE, Immediately Invoked Function Expression)
 
-1. 방식 1
+> 정의되면 즉시 실행되는 함수.  
+>  ● 함수표현식(함수이름 정의안된것)으로 사용해야한다. `function(){}`  
+>  ● 내부에 정의된 어떤 변수도 바깥에 보이지 않는다.
+
+<br><br>
+
+1. 방식 1 `(function () {})();`
 
 ```jsx
 (function () {
@@ -277,7 +288,9 @@ export default function Seo({ title }) {
 1번째 `()`괄호는 익명함수다. 다른 변수들 접근을 막을 수 있다.  
 2번째 `()`괄호는 즉시실행함수를 생성한다. 이로 JS는 함수를 즉시 실행한다.
 
-2. 방식 2
+<br><br>
+
+2. 방식 2 `(function () {}());`
 
 ```jsx
 (function () {
@@ -308,16 +321,7 @@ export default function Home() {
     })(); // (async익명함수)()즉시실행
   }, []);
   return (
-    <div>
-      <Seo title="Home" />
-      {!movies && <h4>Loading ...</h4>}
-      {movies?.map((movie) => (
-        <div key={movie.id}>
-          <h4>{movie.original_title}</h4>
-        </div>
-      ))}
-    </div>
-  );
+    ...
 }
 ```
 
@@ -329,15 +333,32 @@ import Image from "next/image";
 <Image src="me.png" alt="Picture of the author" width={500} height={500} />;
 ```
 
+<br><br>
+
 ## Redirect, Rewrite
 
-- API KEY숨기기 : 사용량제한될수도 있어서 공개되면 남용될수있음.
-  1. redirects: URL 변경됨
-  2. rewrites: URL 변경안됨
-  - `.env`파일생성후 `API_KEY=키복붙` 입력하기
-  - `.gitignore`에 `.env` 마지막에 넣기
-  - `next.config.js`파일에 rewrites로 api key 숨기기
-  - `index.js`에 `` const { results } = await (await fetch(`/api/movies`)).json(); ``로 `/api/movies`로 변경함
+> API KEY 숨기기 : 사용량 제한될수도 있어서 공개되면 남용될 수 있음.
+
+### 1. **redirects** : URL 변경됨. 유저가 URL 변화를 확인함 O.
+
+- source : request 경로
+- destination : redirect할 경로로 변경
+- permanent :
+  1. true는 클라이언트/검색엔진이 redirect를 영구적캐시(기억함)하는 308 status code사용
+  2. false는 임시적이고 캐시되지(기억안함)않는 307 status code사용
+
+### 2. **rewrites** : URL 변경안됨. 유저가 URL 변화를 확인못함 X.
+
+- source : request 경로
+- destination : api key가 담긴 fetch주소
+
+<br>
+
+1. `.env`파일생성후 `API_KEY=키복붙` 입력하기
+2. `.gitignore`에 `.env` 마지막에 넣기 => 그래야 github에 push안됨
+3. `next.config.js`파일에 **rewrites**로 api key 숨기기
+4. `next.config.js`파일 수정하면 터미널 재시작하기. ctrl+c , npm run dev
+5. `index.js`에 `` const { results } = await (await fetch(`/api/movies`)).json(); ``로 **/api/movies**로 변경함
 
 ```jsx
 //next.config.js
@@ -349,7 +370,7 @@ const nextConfig = {
     return [
       {
         source: "/old-blog/:path*", //이 url로 가면 밑url로 자동이동함
-        destination: "/new-blog/:path*",
+        destination: "/new-blog/:path*", //여기로 url 이동
         permanent: false,
       },
     ];
@@ -357,7 +378,7 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/movies",
+        source: "/api/movies", //이 url에 api로 받은 정보를 받아온다. fetch주소임(index.js)
         destination: `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`, //여기에 api key를 숨긴다
       },
     ];
@@ -366,5 +387,56 @@ const nextConfig = {
 
 module.exports = nextConfig;
 ```
+
+<br><br><br><br><br><br>
+
+## async await
+
+```jsx
+async function 함수명() {
+  await 비동기처리메서드명();
+}
+```
+
+### 1. async
+
+- async는 function 앞에 위치
+- async 붙은 해당 함수는 반드시 Promise를 반환한다
+  - Promise가 아닌 값이어도, 이행상태 Promise로 감싸 이행된 Promise 반환되도록 한다
+- async는 화살표함수, 함수표현식으로도 정의 가능하다
+
+### 2. await
+
+- await는 async 함수 내에서만 동작한다
+- JS가 await 보면, Promise가 처리될때까지 기다리고, 처리되면 결과반환한다
+- **await 대상**이 되는 비동기처리메서드는 주로 **Axios, API 호출** 함수다
+- 비동기처리메서드가 꼭 Promise 객체를 반환해야 await가 작동된다
+
+### 3. 사용 예시
+
+- **예외처리**는 `try{}cahch(e){}`구문을 사용한다
+
+```jsx
+//index.js
+//요약버전
+useEffect(() => {
+  (async () => {
+    // async 예약어, ()=>{} 익명함수
+    const { results } = await (await fetch(`/api/movies`)).json();
+    setMovies(results);
+  })(); //()();즉시실행함수 사용
+}, []);
+
+// 요약안한 버전
+// (async () => {
+//   const response =  (await fetch(`/api/movies`));
+//   const json = await response.json();
+//   console.log(response); //obj안 results에 정보다있음
+// })();
+```
+
+요약버전> 1번째 await는 .json을 위함 / 2번째 await는 fetch API를 위한 것이다
+
+<br><br><br><br>
 
 ## Server side Rendering
