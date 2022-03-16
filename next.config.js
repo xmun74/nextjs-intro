@@ -19,8 +19,9 @@ const nextConfig = {
         destination: `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`,
       },
       {
-        source: "/api/movies/:id",
+        source: "/api/movies/:id", //:id로 적은걸 밑에도 동일하게 해야함
         destination: `https://api.themoviedb.org/3/movie/:id?api_key=${API_KEY}`,
+        // /api/movies/12153 으로 데이터 받아짐
       },
     ];
   },

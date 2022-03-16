@@ -452,21 +452,21 @@ useEffect(() => {
 
 ### SSR
 
-- 데이터API 받기 전까진 빈화면이었다가, 받으면 화면보이고 소스코드 HTML에 데이터담김
+- 데이터API 받기 전까진 빈화면이고, 받으면 화면보이고 소스코드 HTML에 데이터담김
 - SEO가 필요한 페이지에서 사용(html에 데이터 다 담겨있어서 SEO유리)
 - loading화면 안보여주고 싶을 때 사용
 - 자바스크립트 비활성화해도 보임. 그냥 html이어서
-- 동작순서
-  1. nextJS가 백엔드(API)에서 받은 props(data)를 return한다
-  2. reactJS가 props(data)인 results 배열 가져와서 프론트엔드에 html보여줌
 
 ### SSR하기 : getServerSideProps
 
-- 이름변경안된다
+- 함수명 변경안된다
 - export는 필수고, async는 선택사항.
 - props라는 key가 들어있고 안에 원하는 데이터넣을 수 있음
 - 여기서 쓰는 내부코드는 서버(백엔드)에서만 작동함
 - API KEY를 여기에 쓰면 절대로 클라이언트(브라우저)에게 안보임
+- 동작순서
+  1. nextJS가 백엔드(API)에서 받은 props(data)를 return한다
+  2. reactJS가 props(data)인 results 배열 가져와서 프론트엔드에 html보여줌
 
 ```jsx
 // index.js
@@ -482,6 +482,14 @@ export async function getServerSideProps() {
 }
 ```
 
+> - **에러** : Only absolute URLs are supported
+> - **원인**  
+>   이 주소는 프론트엔드에서만 작동하는데 이미 브라우저에 localhost url이 있음
+> - **해결**  
+>   `/api/movies` => `http://localhost:3000/api/movies` 변경
+
+<br><br><br>
+
 - Server side통해 props를 Page로 보낼 수 있다
 
 ```jsx
@@ -493,7 +501,11 @@ export default function AnyApp({ Component, pageProps }) {
     </Layout>
   );
 }
-// <Component {...pageProps} /> props가 {...pageProps}로 들어온다
+// <props전달 순서>
+// (index.js)getServerSideProps의 props가
+// _app.js의 Component {pageProps}로 오고
+// (index.js) Home의 props로 온다
+
 // <Home {results} />           예를들면 이렇게 들어오는 것.
 ```
 
@@ -501,37 +513,269 @@ export default function AnyApp({ Component, pageProps }) {
 
 ## Dynamic Routes
 
-### 중첩라우터
+영화클릭하면 상세페이지로 이동하는 URL만들기
+
+### 1. 중첩라우터 (Nested Router)
 
 ex) `/movies/all`  
-pages/movies폴더/all.js만들기  
+pages/movies폴더 생성/all.js 생성
 <br>
 ex) `/movies`  
-pages/movies폴더/index.js만들기
+pages/movies폴더 생성/index.js 생성
 
 <br><br>
 
-### URL에 변수 넣는법
+### 2. /URL/변수 넣는법
 
 ex) `/movies/1212121`  
-pages/movies폴더/**[변수명].js** 생성
+pages/movies폴더 생성/**[변수명].js** 생성
 
 <br><br><br><br>
 
-## Movie Detail
+## Movie Detail - Navigating
 
-### router.push(url,as,options)
+제목, 이미지를 눌러도 상세페이지로 이동하기
 
-> URL에서 URL로 state 넘겨주기(유저한텐 숨긴상태로)  
-> url : 탐색할 URL  
-> as : 브라우저url에 표시될 경로
+<br><br>
 
-<br><br><br><br>
+1. navigating 방법 1 : **Link**  
+   text글자 링크 가능
+
+```js
+<Link href={`/movies/${movie.original_title}/${movie.id}`}>
+  <a>{movie.original_title}</a>
+</Link>
+```
+
+2. navigating 방법 2 : **useRouter/onClick - router.push**  
+   이미지div 링크할때 사용했음
+
+```js
+  const router = useRouter();
+  const onClick = (id, title) => {
+    router.push(`/movies/${title}/${id}`);
+  };
+..
+      {results?.map((movie) => (
+        <div
+          onClick={() => onClick(movie.id, movie.original_title)}
+          className="movie"
+          key={movie.id}
+        >
+...
+```
+
+- `next.config.js`파일 추가  
+  `/api/movies/12153` 으로 데이터 받아짐
+
+```jsx
+//next.config.js
+  async rewrites() {
+    ...
+{
+  source: "/api/movies/:id",
+  //  :id로 적은걸 destination에도 동일하게 해야함
+  destination: `https://api.themoviedb.org/3/movie/:id?api_key=${API_KEY}`,
+  // /api/movies/12153 으로 데이터 받고 api는숨김
+},
+```
+
+### URL에서 URL로 state 넘겨주기(유저한텐 숨긴상태로)
+
+> router.push(url, as, options)
+>
+> - url : 탐색할 URL
+> - as : 브라우저 URL에 표시될 경로로 마스크씌움.
+
+```jsx
+const router = useRouter();
+const onClick = (id, title) => {
+  router.push(
+    {
+      pathname: `/movies/${id}`,
+      query: {
+        title,
+      },
+    },
+    `/movies/${id}`
+    //masked됨 query부분안보이고 {},url 콤마다음url로 보여짐
+  );
+};
+...
+  <Link
+      href={{
+        pathname: `/movies/${movie.id}`,
+        query: {
+          title: movie.original_title,
+        },
+      }}
+      as={`/movies/${movie.id}`}
+    >
+      <a>{movie.original_title}</a>
+  </Link>
+```
+
+<br><br>
+
+### 🔻문제점
+
+**<현재>**  
+url은 `/movies/634649`로 보이고, 홈페이지에서 받아온 제목이 상세페이지에 보임  
+<br>
+**<문제>**  
+홈페이지에서 상세페이지로 이동했을때만 작동.  
+유저가 상세페이지로 바로 접속시(incognito모드) => Loading만 보임  
+<br>
+**<개선할 점>**  
+유저가 상세페이지로 바로 접속시 => 바로 영화제목 보이게 하기
+
+<br><br><br><br><br><br><br>
 
 ## Catch All
 
-이전> 홈페이지에서 영화 클릭해야 상세페이지로 올 수 있었음  
-지금> 홈페이지통하지 않아도 상세페이지에서 제목 볼 수 있게하기
+**<이전>** 홈페이지 통해서 상세페이지로와야 영화제목 볼 수 있었음  
+**<지금>** 홈페이지 안 통해도 상세페이지에서 제목 볼 수 있게하기
+<br><br><br>
+
+### ✅ [...변수명].js
+
+> pages/movies/`[...params].js` 으로 변경하기
+>
+> - `...` 은 url 뒤에 모든 변수를 캐치한다  
+>   ex) `/movies/title/id/12/123/212/1212`
+
+<br><br><br>
+
+- index 수정 전
+
+```jsx
+// 수정전
+  router.push(
+    {
+      pathname: `/movies/${id}`,
+      query: {
+        title,
+      },
+    },
+    `/movies/${id}`
+  );
+  ...
+  <Link
+    href={{
+      pathname: `/movies/${movie.id}`,
+      query: {
+        title: movie.original_title,
+      },
+    }}
+    as={`/movies/${movie.id}`}
+  >
+
+
+```
+
+- index 수정 후
+
+```jsx
+// 수정후
+router.push(`/movies/${title}/${id}`);
+...
+<Link href={`/movies/${movie.original_title}/${movie.id}`}>
+
+```
+
+> 바로 상세페이지 가면  
+> `/movies/Spider-Man:%20No%20Way%20Home/634649` url이고  
+> Loading 띄어짐
+
+<br><br><br>
+
+- [params].js 1차 수정
+
+```jsx
+// [params].js
+export default function Detail() {
+  const router = useRouter();
+  const [title, id] = router.query.params; //추가
+  return (
+    <div>
+      <h4>{title}</h4> // {title}추가
+    </div>
+  );
+}
+```
+
+### 🔻문제점
+
+#### <에러>
+
+Incognito 모드(비밀모드: Ctrl+Shift +N)에선 에러남
+<br>
+
+#### <원인>
+
+백엔드(서버)에서 pre-render되기 때문.  
+서버엔 router.query.params가 아직 존재 안하기 때문
+
+<br>
+
+#### <해결>
+
+```jsx
+// [params].js
+const [title, id] = router.query.params || []; // || [] 추가
+```
+
+> - **|| [] 추가 이유**  
+>   미리렌더링으로 초기html 다운받아오고  
+>   아직 js다운안되서 useRouter가 정보를 못가져와서 에러난다.  
+>   그래서 초기에 빈배열 추가해줘서 오류 안나게 하고  
+>   js가 다시 렌더링하면 그때 빈배열아닌 router.query.params 출력한다
+
+**BUT**  
+이건 **CSR 클라이언트만 한 것**. 소스코드에 데이터 영화제목 없어서 seo해당안됨
+<br><br><br><br><br><br>
+
+### ✅ SSR 하기 - `[...params].js`
+
+- SSR : 유저에게 Loading 화면 안보여주고, SEO 최적화 하기
+- 여기선 데이터fetch말고 미리 데이터 가져오기 위함으로 사용했음
+- `[params].js` 2차 수정 - `getServerSideProps` 추가
+
+```jsx
+// 컴포넌트 내부 router = 클라이언트에서 실행
+export default function Detail({ params }) {
+  //{ params }추가
+  const router = useRouter();
+  const [title, id] = params || []; //params로 변경
+  return (
+    <div>
+      <h4>{title}</h4>
+    </div>
+  );
+}
+
+// getServerSideProps = 서버에서 데이터가져옴, 소스코드에 데이터담음
+export function getServerSideProps({ params: { params } }) {
+  // console.log(ctx); //getServerSideProps(ctx)지원함
+  return {
+    props: {
+      params,
+    },
+  };
+}
+```
+
+- Incognito모드에서도 url에 데이터(제목,id)받아서, 소스코드에도 데이터 담긴다
+
+<br><br><br><br>
+
+<br><br><br><br>
+
+### 예시
+
+`http://localhost:3000/movies/Spider-Man:%20No%20Way%20Home/634649`  
+`Spider-Man:%20No%20Way%20Home`은 유저에 보여줄 데이터(상세페이지 제목)  
+`634649`은 API요청 보낼때 사용
 
 <br><br><br><br>
 
