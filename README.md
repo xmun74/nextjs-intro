@@ -115,44 +115,78 @@ export default function NavBar() {
 
 ### CSS Modules 방식 : 기본 CSS 사용가능해짐
 
-- 파일명이 `파일명.module.css`의 방식
-- 페이지 빌드시 className을 무작위로 생성 = 자동으로 중복제거해줘서 재사용성 높아짐
-- `<nav className="nav">` : 이렇겐 작동안함
-- className을 만들어야 하고 복붙해야함
+- 파일명이 `파일명.module.css`의 방식 ex)NavBar.js의 스타일이면 NavBar.module.css
+- `<nav className={styles.nav}>` : ⭕ 작동함
+- `<nav className="nav">` : ❌이렇겐 작동안함
+- 페이지 빌드시 className을 랜덤으로 생성 = 자동으로 중복제거해줘서 재사용성 높아짐
+- **단점**
+  - className을 만들어야 하고 복붙해야하고 두개의 파일을 가져야함
+  - 조건부를 사용하는 것이 복잡해보임
 
 ```js
-import styles from "./NavBar.module.css"; //추가
+//NavBar.js
+import styles from "./NavBar.module.css"; // import 추가
 ...
 <nav className={styles.nav}> //작동함
 ```
 
-**<공통css, 조건부css 둘다 적용하기>**
-
-1. className={`${공통css} ${조건부css}`}
-
-```js
-className={`${styles.link} ${
-            router.pathname === "/" ? styles.active : ""
-          }`}
+```css
+/* NavBar.module.css */
+.link {
+  text-decoration: none;
+}
+.active {
+  color: tomato;
+}
 ```
 
-2. className={[공통css, 조건부css,].join(" ")}
+**<공통css, 조건부css 둘다 적용하기>**
 
-- .join(" ") : 배열요소 사이에 " "공백 넣어서 연결
+1. `` <a className={`${공통css} ${조건부css}`}></a> ``
 
 ```js
-className={[
-            styles.link,
-            router.pathname === "/about" ? styles.active : "",
-          ].join(" ")}
+<a className={`${styles.link} ${router.pathname === "/" ? styles.active : ""}`}>
+  Home
+</a>
+```
+
+2. `` <a className={[공통css, 조건부css,].join(" ")}`></a> ``
+
+- .join(" ") : 배열요소들을 " "공백 넣어서 연결
+
+```js
+<a
+  className={[
+    styles.link,
+    router.pathname === "/about" ? styles.active : "",
+  ].join(" ")}
+>
+  About
+</a>
 ```
 
 ## Styles JSX
 
-- 해당 컴포넌트에서만 scoped(한정되어 적용) 됨
-- `` <style jsx>{` 태그{ 스타일 적용 } `}</style> ``
+`` <style jsx>{` 태그{ 스타일 적용 } `}</style> ``
+
+- Next.js의 고유한 방법
+- 해당 컴포넌트에서만 범위가 한정scoped(한정되어 적용) 됨.  
+  ex) NavBar에서만 적용되고 index.js에서 className="active"해도 적용안됨
+- <태그>로 스타일적용하면 됨. class명 따로 짓지 않아도 된다
+- class명 랜덤으로 생김  
+  ex) `class="jsx-c9c038d35b36f033 active"` `.active.jsx-c9c038d35b36f033`
 
 ```js
+// NavBar.js
+<div>
+  <Link href="/">
+    <a className={router.pathname === "/" ? "active" : ""}>Home</a>
+  </Link>
+  <Link href="/about">
+    <a className={router.pathname === "/about" ? "active" : ""}>About</a>
+  </Link>
+</div>
+
 <style jsx>{`
   nav {
     background-color: tomato;
@@ -168,22 +202,23 @@ className={[
 
 ## 전역 스타일
 
-- App Component, App Page
-- reactjs는 각각 구분된 페이지여서 전역CSS가 적용이 안됨
-- pages폴더에 `_app.js` 파일에서만 전역CSS 적용가능 (파일명 `_app.js` 필수여야함)
-- `_app.js` 컴포넌트명은 아무거나 가능
+- pages폴더/`_app.js` 파일에서만 전역CSS 적용가능 (파일명 `_app.js` 필수여야함)  
+  reactjs는 각각 구분된 페이지여서 전역CSS가 적용이 안됨
+- `_app.js` 컴포넌트명은 아무거나 가능 `MyApp`
+- App Component, App Page `{ Component, pageProps }` 필수 prop
+- `import "../styles/globals.css";` 전역 css는 \_app.js에서만 import가능
 
 ```js
 // pages/_app.js
 import NavBar from "../components/NavBar";
 import "../styles/globals.css"; //이파일에서만 전역css import가능
 
-export default function MyApp({ Component, PageProps }) {
+export default function MyApp({ Component, pageProps }) {
   //컴포넌트명은 아무거나 가능
   return (
     <>
       <NavBar />
-      <Component {...PageProps} />
+      <Component {...pageProps} />
       <style jsx global>
         {`
           a {
@@ -270,6 +305,39 @@ export default function Seo({ title }) {
   2. 로그인 - Settings - API - API 키 (v3 auth) 복사
   3. https://developers.themoviedb.org/3/movies/get-popular-movies 에서 사용법보고 `index.js`작성
 
+```js
+// index.js
+import { useEffect, useState } from "react";
+import Seo from "../components/Seo";
+
+const API_KEY = "복붙";
+
+export default function Home() {
+  const [movies, setMovies] = useState([]);
+  useEffect(() => {
+    (async () => {
+      const { results } = await (
+        await fetch(
+          `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`
+        )
+      ).json();
+      setMovies(results);
+    })();
+  }, []);
+  return (
+    <div>
+      <Seo title="Home" />
+      {!movies && <h4>Loading</h4>}
+      {movies?.map((movie) => (
+        <div key={movie.id}>
+          <h4>{movie.original_title}</h4>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
 <br><br>
 
 ### 즉시실행함수(IIFE, Immediately Invoked Function Expression)
@@ -306,7 +374,7 @@ export default function Seo({ title }) {
 import { useEffect, useState } from "react";
 import Seo from "../components/Seo";
 
-const API_KEY = "1a9274478cb8fe088e108a3681a7582e";
+const API_KEY = "복붙";
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
@@ -328,7 +396,10 @@ export default function Home() {
 }
 ```
 
+### Image
+
 - `<img>`태그 대신 next의 `<Image>`사용하기 (이강의에선 안했음)
+- public폴더 안에 파일은 그냥 `/파일명` 으로 접근가능하다 `<img src="/vercel.svg" />`
 
 ```jsx
 import Image from "next/image";
@@ -342,7 +413,7 @@ import Image from "next/image";
 
 > API KEY 숨기기 : 사용량 제한될수도 있어서 공개되면 남용될 수 있음.
 
-### 1. **redirects** : URL 변경됨. 유저가 URL 변화를 확인함 O.
+### 1. 🔺**redirects** : URL 변경됨. 유저가 URL 변화를 확인함 O.
 
 - source : request 경로
 - destination : redirect할 경로로 변경
@@ -350,7 +421,7 @@ import Image from "next/image";
   1. true는 클라이언트/검색엔진이 redirect를 영구적캐시(기억함)하는 308 status code사용
   2. false는 임시적이고 캐시되지(기억안함)않는 307 status code사용
 
-### 2. **rewrites** : URL 변경안됨. 유저가 URL 변화를 확인못함 X.
+### 2. ⭕**rewrites** : URL 변경안됨. 유저가 URL 변화를 확인못함 X.
 
 - source : request 경로
 - destination : api key가 담긴 fetch주소
@@ -704,9 +775,7 @@ export default function Detail() {
 }
 ```
 
-### 🔻문제점
-
-#### <에러>
+### 🔻에러
 
 Incognito 모드(비밀모드: Ctrl+Shift +N)에선 에러남
 <br>
@@ -718,7 +787,7 @@ Incognito 모드(비밀모드: Ctrl+Shift +N)에선 에러남
 
 <br>
 
-#### <해결>
+#### <해결 1> - || [] 추가
 
 ```jsx
 // [params].js
@@ -732,17 +801,18 @@ const [title, id] = router.query.params || []; // || [] 추가
 >   js가 다시 렌더링하면 그때 빈배열아닌 router.query.params 출력한다
 
 **BUT**  
-이건 **CSR 클라이언트만 한 것**. 소스코드에 데이터 영화제목 없어서 seo해당안됨
+이건 **CSR 클라이언트만 한 것**. 소스코드에 데이터 영화제목 없어서 SEO 최적화 안됨
 <br><br><br><br><br><br>
 
-### ✅ SSR 하기 - `[...params].js`
+### ✅ <해결 2> SSR 하기 - getServerSideProps
 
 - SSR : 유저에게 Loading 화면 안보여주고, SEO 최적화 하기
 - 여기선 데이터fetch말고 미리 데이터 가져오기 위함으로 사용했음
 - `[params].js` 2차 수정 - `getServerSideProps` 추가
+- 컴포넌트 내부 router 사용 => router는 클라이언트에서만 실행됨
 
 ```jsx
-// 컴포넌트 내부 router = 클라이언트에서 실행
+// [...params].js
 export default function Detail({ params }) {
   //{ params }추가
   const router = useRouter();

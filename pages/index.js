@@ -60,7 +60,7 @@ export default function Home({ results }) {
 export async function getServerSideProps() {
   // 내부 코드(API KEY)는 서버(백엔드)에서만 작동함. 절대로 클라이언트(브라우저)에 안보임
   const { results } = await (
-    await fetch(`http://localhost:3000/api/movies`)
+    await fetch(`http://localhost:3001/api/movies`)
   ).json();
   return {
     props: {
